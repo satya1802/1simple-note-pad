@@ -5,7 +5,7 @@
 <!-- sdlc:auto:start overview -->
 simple note pad
 
-**Documentation version:** v2
+**Documentation version:** v3
 <!-- sdlc:auto:end overview -->
 
 ## Contents
@@ -15,7 +15,7 @@ simple note pad
 |---|---|
 | [Requirements](requirements/README.md) | v1 approved |
 | [Architecture](architecture/README.md) | 12 entries |
-| [Development](development/README.md) | 1 entry |
+| [Development](development/README.md) | 4 entries |
 | [Testing](testing/README.md) | 1 entry |
 | [Deployment](deployment/README.md) | 1 entry |
 | [Maintenance](maintenance/README.md) | 1 entry |
@@ -31,7 +31,7 @@ simple note pad
 | [Runbook](deployment/runbook.md) | not deployed yet |
 | [Release notes](deployment/release-notes.md) | 0 releases |
 | [Traceability matrix](traceability-matrix.md) | 13 requirements |
-| [Changelog](CHANGELOG.md) | 2 versions |
+| [Changelog](CHANGELOG.md) | 3 versions |
 <!-- sdlc:auto:end contents -->
 
 ## Open gaps
@@ -55,7 +55,15 @@ simple note pad
 
 ### Development
 
-- Development phase has not started: no sprint plans, tickets, or code/implementation records are available.
+- No record of actual development execution (tickets started/completed, code produced, commits, PRs) exists in the input -- only the plan's assignment of work. Completion status of any story cannot be confirmed.
+- No evidence provided that any US-001 through US-004 ticket was actually started, implemented, or completed.
+- 4 points of the 20-point capacity are unaccounted for by named items -- unclear if intentional buffer or an omission.
+- No evidence provided that any US-005 through US-008 ticket was actually started, implemented, or completed.
+- 5 points of the 20-point capacity are unaccounted for by named items.
+- Sprint 2's stated goal references recency ordering, but the corresponding story (US-009) is listed under Sprint 3/EPIC-003, not Sprint 2 -- discrepancy between sprint goal text and item assignment should be confirmed.
+- No evidence provided that any US-009 through US-013 ticket was actually started, implemented, or completed.
+- 2 points of the 20-point capacity are unaccounted for by named items.
+- US-013 ('Free to use with no billing') is described as a frontend-agent story with no detail on what, if any, functionality or verification this entails -- unclear what is actually being built versus simply a policy statement.
 
 ### Testing
 
