@@ -16,9 +16,9 @@ Which Cloud technology does the project use? Decided in architecture v2.
 
 ## Decision Outcome
 
-Chosen option: AWS, because Runs web, server, database and email in one account on a free tier that keeps costs near zero for a free personal tool, with room to grow without re-platforming.
+Chosen option: AWS, because Runs the whole app — static web, API, database and email — in one account on the free tier, keeping early costs near zero and leaving room to scale quietly if more people sign up.
 
 ## Consequences
 
-Some AWS-specific configuration, but the default platform target and lowest-cost path for this app.
+Managing multiple AWS services adds some setup, but keeping everything in one account simplifies operation for a free personal tool.
 <!-- sdlc:auto:end adr -->

@@ -9,10 +9,10 @@ Pushes to `main` run `.github/workflows/deploy.yml`, which builds the API image 
 <!-- sdlc:auto:start environments -->
 | Name | Service | Runtime | Scaling | Environment |
 |---|---|---|---|---|
-| web-spa | AWS S3 + CloudFront (static React build) | Static assets over HTTPS | CDN edge caching, serverless scale | dev |
-| api-server | AWS App Runner | FastAPI 0.115 on Python container | Scale-to-low on light load, auto-scale on requests | dev |
-| notes-db | AWS RDS PostgreSQL | PostgreSQL 16 | Single free-tier instance, vertical scale later | dev |
-| smtp-relay | External SMTP server | SMTP over TLS | Provider-managed | dev |
+| React Web (static hosting + CDN) | AWS S3 + CloudFront | Static build (React 19) | CDN edge caching | dev |
+| FastAPI Backend | AWS (App Runner / ECS Fargate) | Python 3.12, Uvicorn, FastAPI 0.115 | Single small instance for dev, scales horizontally later | dev |
+| PostgreSQL | AWS RDS for PostgreSQL 16 | PostgreSQL 16 | Single db.t-class free-tier instance | dev |
+| SMTP Email | SMTP (SaaS) — e.g. Amazon SES SMTP | SMTP relay | Managed | dev |
 <!-- sdlc:auto:end environments -->
 
 <!-- sdlc:auto:start live -->
@@ -22,12 +22,12 @@ _Not deployed yet._
 <!-- sdlc:auto:start topology -->
 ```mermaid
 graph LR
-  n_web_spa["web-spa<br/>AWS S3 + CloudFront (static React build)"]
-  n_api_server["api-server<br/>AWS App Runner"]
-  n_notes_db["notes-db<br/>AWS RDS PostgreSQL"]
-  n_smtp_relay["smtp-relay<br/>External SMTP server"]
-  n_web_spa -->|"HTTPS"| n_api_server
-  n_api_server -->|"TLS (PostgreSQL wire protocol)"| n_notes_db
-  n_api_server -->|"SMTP over TLS"| n_smtp_relay
+  n_React_Web__static_hosting___CDN_["React Web (static hosting + CDN)<br/>AWS S3 + CloudFront"]
+  n_FastAPI_Backend["FastAPI Backend<br/>AWS (App Runner / ECS Fargate)"]
+  n_PostgreSQL["PostgreSQL<br/>AWS RDS for PostgreSQL 16"]
+  n_SMTP_Email["SMTP Email<br/>SMTP (SaaS) — e.g. Amazon SES SMTP"]
+  n_React_Web__static_hosting___CDN_ -->|"HTTPS"| n_FastAPI_Backend
+  n_FastAPI_Backend -->|"TLS (PostgreSQL wire protocol)"| n_PostgreSQL
+  n_FastAPI_Backend -->|"SMTP over TLS"| n_SMTP_Email
 ```
 <!-- sdlc:auto:end topology -->

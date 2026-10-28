@@ -12,6 +12,7 @@
 **Designed but missing:**
 
 - DELETE /notes/{id}
+- GET /auth/me
 - GET /notes
 - GET /notes/{id}
 - POST /auth/login

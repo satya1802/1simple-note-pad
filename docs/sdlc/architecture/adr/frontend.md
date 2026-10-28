@@ -16,9 +16,9 @@ Which Frontend technology does the project use? Decided in architecture v2.
 
 ## Decision Outcome
 
-Chosen option: React 19, because Drives the single main screen -- a searchable note list and an in-place editor -- with live, instant-feeling editing as users type and switch notes and devices (NFR-004, US-012).
+Chosen option: React 19, because Drives the single main screen — a live note list and in-place plain-text editor that must feel instant while typing and switching notes (NFR-004) — and renders the responsive layout across phone, tablet and desktop (NFR-003). Built as a static bundle served from S3 + CloudFront.
 
 ## Consequences
 
-A SPA needs a small amount of client-side routing and state wiring, but keeps the responsive, instant UX the product needs and is easy to hand to another developer.
+A SPA needs client-side routing and token handling, but that overhead is tiny for a one-screen app and keeps the editor responsive.
 <!-- sdlc:auto:end adr -->

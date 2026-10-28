@@ -12,13 +12,13 @@ Which Backend technology does the project use? Decided in architecture v2.
 
 - FastAPI 0.115
 - Flask
-- Express
+- Django
 
 ## Decision Outcome
 
-Chosen option: FastAPI 0.115, because Implements the small, clear API surface -- sign-in and per-user note CRUD plus search -- with little code and good performance under light load.
+Chosen option: FastAPI 0.115, because Handles the small, clear surface: email/password auth, persistent token sessions, and per-user note CRUD and search. Pydantic models validate email/password inputs and the async stack stays fast under light personal-app load.
 
 ## Consequences
 
-Minimal batteries-included tooling means auth and email are assembled from focused libraries, which suits this small scope.
+FastAPI is unopinionated about auth and ORM, so password hashing, tokens and migrations are assembled from libraries rather than provided out of the box — acceptable for this small scope.
 <!-- sdlc:auto:end adr -->

@@ -11,14 +11,14 @@ Built from recorded links, not written by a model: requirement key → plan item
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | US-001 | EPIC-001 | Sign up with email and password | US-001 | 1 | POST /auth/signup, backend, database, users | — | — | not started | not run | 0/3 tested · 0/3 passing | — |
 | US-002 | EPIC-001 | Sign in with email and password | US-002 | 1 | POST /auth/login, backend, database, users | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
-| US-003 | EPIC-001 | Persistent session across devices | US-003 | 1 | POST /auth/logout, backend, database, users | — | — | not started | not run | 0/3 tested · 0/3 passing | — |
+| US-003 | EPIC-001 | Persistent session across devices | US-003 | 1 | POST /auth/login, POST /auth/logout, backend, users | — | — | not started | not run | 0/3 tested · 0/3 passing | — |
 | US-004 | EPIC-001 | Notes kept private to each account | US-004 | 1 | GET /notes, GET /notes/{id}, backend, database, notes, users | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
 | US-005 | EPIC-002 | Create a plain-text note | US-005 | 2 | POST /notes, backend, database, notes | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
-| US-006 | EPIC-002 | Give a note an optional title with first-line fallback | US-006 | 2 | POST /notes, PUT /notes/{id}, backend, database, notes | — | — | not started | not run | 0/3 tested · 0/3 passing | — |
-| US-007 | EPIC-002 | Edit an existing note | US-007 | 2 | GET /notes/{id}, PUT /notes/{id}, backend, database, notes | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
+| US-006 | EPIC-002 | Give a note an optional title with first-line fallback | US-006 | 2 | POST /notes, PUT /notes/{id}, backend, notes | — | — | not started | not run | 0/3 tested · 0/3 passing | — |
+| US-007 | EPIC-002 | Edit an existing note | US-007 | 2 | PUT /notes/{id}, backend, database, notes | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
 | US-008 | EPIC-002 | Delete a note | US-008 | 2 | DELETE /notes/{id}, backend, database, notes | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
 | US-009 | EPIC-003 | View all notes ordered by most recently edited | US-009 | 2 | GET /notes, backend, frontend, notes | — | — | not started | not run | 0/3 tested · 0/3 passing | — |
-| US-010 | EPIC-003 | See last-edited timestamp on each note | US-010 | 3 | frontend, notes | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
+| US-010 | EPIC-003 | See last-edited timestamp on each note | US-010 | 3 | GET /notes, frontend, notes | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
 | US-011 | EPIC-003 | Search notes by keyword | US-011 | 3 | GET /notes, backend, database, notes | — | — | not started | not run | 0/3 tested · 0/3 passing | — |
 | US-012 | EPIC-004 | Use the app on any device size | US-012 | 3 | frontend | — | — | not started | not run | 0/2 tested · 0/2 passing | — |
 | US-013 | EPIC-004 | Free to use with no billing | US-013 | 3 | frontend | — | — | not started | not run | 0/1 tested · 0/1 passing | — |

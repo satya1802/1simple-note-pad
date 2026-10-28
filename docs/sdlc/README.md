@@ -5,7 +5,7 @@
 <!-- sdlc:auto:start overview -->
 simple note pad
 
-**Documentation version:** v3
+**Documentation version:** v4
 <!-- sdlc:auto:end overview -->
 
 ## Contents
@@ -14,7 +14,7 @@ simple note pad
 | Document | State |
 |---|---|
 | [Requirements](requirements/README.md) | v1 approved |
-| [Architecture](architecture/README.md) | 12 entries |
+| [Architecture](architecture/README.md) | 16 entries |
 | [Development](development/README.md) | 4 entries |
 | [Testing](testing/README.md) | 1 entry |
 | [Deployment](deployment/README.md) | 1 entry |
@@ -31,7 +31,7 @@ simple note pad
 | [Runbook](deployment/runbook.md) | not deployed yet |
 | [Release notes](deployment/release-notes.md) | 0 releases |
 | [Traceability matrix](traceability-matrix.md) | 13 requirements |
-| [Changelog](CHANGELOG.md) | 3 versions |
+| [Changelog](CHANGELOG.md) | 4 versions |
 <!-- sdlc:auto:end contents -->
 
 ## Open gaps
@@ -43,15 +43,14 @@ simple note pad
 
 ### Architecture
 
-- Overview does not cite specific requirement IDs, so this summary-level entry cannot be traced to individual user stories beyond what appears in the tech-decision notes (US-011, US-012).
-- Input does not explicitly state which requirement IDs besides US-011 the backend as a whole satisfies.
-- No requirement ID in the known list is explicitly linked to password-reset/email functionality in this input; traceability to a specific US-xxx is unconfirmed.
-- No explicit requirement ID is attached to this critical path in the input.
-- No explicit requirement ID is attached to this critical path in the input, though it aligns functionally with title-derivation behavior described under the POST/PUT /notes endpoints.
-- No explicit requirement IDs are attached to individual entities in the input.
-- Endpoints are not individually mapped to requirement IDs in the input beyond the general US-011 search reference; per-endpoint traceability to US-001..US-013 is not explicit.
-- No deployment phase input exists yet to confirm these nodes were actually provisioned as designed (see deployment phase gaps).
-- NFR-004 is referenced in the input but is not present in the known requirement-key list provided for this project; confirm whether it is a tracked non-functional requirement elsewhere.
+- Input does not list which specific US-00x requirements this architecture version satisfies or supersedes from version 1; only inferred from component/critical-path descriptions.
+- No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
+- Input says 'optional verification' email without clarifying whether email verification is in scope for this version — flagged as ambiguous.
+- No explicit requirement IDs (US-00x) are cited in the input for this critical path; linkage would need confirmation against the requirements phase.
+- No explicit requirement IDs (US-00x) are cited in the input for this data model; linkage would need confirmation against the requirements phase.
+- No explicit requirement IDs (US-00x) are cited in the input for these endpoints; linkage would need confirmation against the requirements phase.
+- NFR-003 and NFR-004 are referenced by the architecture input but are not in the known requirement key list (US-001..US-013); confirm these NFR IDs exist in the requirements phase.
+- No explicit requirement IDs (US-00x) are cited in the input for this decision; linkage would need confirmation against the requirements phase.
 
 ### Development
 

@@ -16,9 +16,9 @@ Which Database technology does the project use? Decided in architecture v2.
 
 ## Decision Outcome
 
-Chosen option: PostgreSQL 16, because Stores accounts and notes durably and consistently across devices and performs keyword search itself via built-in full-text search (tsvector + GIN), so no separate search system is added (US-011).
+Chosen option: PostgreSQL 16, because Durably and privately stores accounts and notes with per-user ownership, stays consistent as a user edits from several devices, and performs the keyword search itself with built-in full-text search (tsvector + GIN index) — no separate search service needed.
 
 ## Consequences
 
-Full-text search is simpler than a dedicated engine but is more than sufficient for a single user's personal notes at this scale.
+Full-text search covers keyword matching well; it is less sophisticated than a dedicated search engine, but that is unnecessary at this scale and avoids extra infrastructure.
 <!-- sdlc:auto:end adr -->

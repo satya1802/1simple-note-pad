@@ -5,129 +5,140 @@
 <!-- sdlc:auto:start narrative -->
 ## Overview
 
-### ARCH-001 · approved · source: architecture:summary
+### ARCH-000 · approved · source: architecture:summary
 
-Overall architecture (v2, approved): a lightweight, responsive personal note-taking web app with a React SPA frontend, FastAPI backend, PostgreSQL datastore, and SMTP-based password reset, run entirely on AWS free tier.
+Overall architecture for the Simple Note Pad app: a React 19 SPA, FastAPI 0.115 backend, PostgreSQL 16 database, and SMTP email sender, all hosted in one AWS account on the free tier.
 
-Approved architecture, version 2. A React 19 single-page frontend lets each signed-in user create, edit, delete, list (ordered by most-recently-edited) and keyword-search their own plain-text notes. A FastAPI 0.115 backend handles email/password sign-up and sign-in with JWT-based persistent sessions, enforces per-user privacy on every note operation, derives a note title from its first line when none is given, and sends password-reset emails via an external SMTP server. PostgreSQL 16 durably stores users and notes and performs keyword search with its built-in full-text search, so no separate search service is needed. The whole stack runs in one AWS account on its free tier.
+Approved, version 2. The system is a lightweight, responsive personal note-taking web app. The React 19 SPA provides sign-in/sign-up and one main screen with a searchable, recently-edited-ordered note list plus an in-place plain-text editor. FastAPI 0.115 handles email/password auth with persistent token sessions and owns per-user note CRUD and keyword search. PostgreSQL 16 durably stores accounts and notes and performs keyword search via built-in full-text search (no separate search engine needed). Transactional password-reset email is sent via an approved SMTP service. The whole app runs in a single AWS account on the free tier.
 
-- ⚠ Overview does not cite specific requirement IDs, so this summary-level entry cannot be traced to individual user stories beyond what appears in the tech-decision notes (US-011, US-012).
+- ⚠ Input does not list which specific US-00x requirements this architecture version satisfies or supersedes from version 1; only inferred from component/critical-path descriptions.
 
-### ARCH-002 · approved · source: architecture:components:frontend
+### ARCH-COMP-web · approved · source: architecture:components.web
 
-Web SPA (React 19): sign-up/sign-in screens, a searchable note list ordered by most-recently-edited, and an in-place plain-text editor.
+React 19 single-page web app providing sign-up/sign-in, the note list, and the in-place plain-text editor.
 
-Component: frontend -- Web SPA built with React 19. Provides a responsive single-page UI covering sign-up/sign-in screens, a searchable note list ordered by most-recently-edited, and an in-place plain-text editor designed to feel instant while typing and switching notes. Cited against NFR-004 and US-012 in the technology-decision rationale for React.
+Component 'web': React Web App (React 19). Responsible for sign-up/sign-in screens, a note list ordered by last edited, a plain-text editor with instant typing, keyword search, and sign-out. Keeps the session token client-side and enforces that notes are shown only when signed in.
 
-**Related:** US-012
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
 
-### ARCH-003 · approved · source: architecture:components:backend
+### ARCH-COMP-api · approved · source: architecture:components.api
 
-API Server (FastAPI 0.115) providing authentication and per-user note CRUD plus keyword search, enforcing strict per-user data isolation.
+FastAPI 0.115 backend handling authentication, session tokens, and per-user note CRUD/search.
 
-Component: backend -- REST API for authentication (sign-up, sign-in, logout, password reset), persistent JWT sessions, and per-user CRUD plus keyword search over notes. Enforces that users only ever read or write their own notes, derives titles from the first line when none is given, and sends reset emails via SMTP. Implements the full-text-search-backed query capability referenced under US-011.
+Component 'api': FastAPI Backend (FastAPI 0.115). Authenticates users via email/password, issues and verifies persistent session tokens, scopes every note operation to the signed-in owner, serves note CRUD, recently-edited ordering and keyword search, derives note titles from the first line when none is given, and triggers password-reset emails.
 
-**Related:** US-011
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
 
-- ⚠ Input does not explicitly state which requirement IDs besides US-011 the backend as a whole satisfies.
+### ARCH-COMP-db · approved · source: architecture:components.db
 
-### ARCH-004 · approved · source: architecture:components:database
+PostgreSQL 16 database for durable, private storage of accounts and notes with built-in keyword search.
 
-Notes Datastore (PostgreSQL 16): durable, private storage of accounts and notes with built-in full-text search.
+Component 'db': PostgreSQL Database (PostgreSQL 16). Provides durable, private storage of accounts and notes, enforces per-user ownership, provides keyword search over note title and body via built-in full-text search, and keeps data consistent across a user's devices.
 
-Component: database -- Durable, private storage of accounts and notes, consistent across devices, with full-text search over note title and body using PostgreSQL's built-in tsvector + GIN indexing. Chosen specifically so no separate search system needs to be added (explicitly tied to US-011 in the technology-decision rationale).
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
 
-**Related:** US-011
+### ARCH-COMP-email · approved · source: architecture:components.email
 
-### ARCH-005 · approved · source: architecture:components:email
+SMTP-based email sender used for transactional password-reset (and optional verification) emails.
 
-Transactional email via an external SMTP server, used to send password-reset (and optionally verification) messages.
+Component 'email': SMTP Email Sender (SMTP (SaaS) via AWS). Sends the few transactional emails (password reset and optional verification) so a user who forgets their password is not locked out.
 
-Component: email -- Sends password-reset (and optional verification) messages so a user who forgets their password is not locked out permanently. Delivered via an external SMTP server over TLS.
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
+- ⚠ Input says 'optional verification' email without clarifying whether email verification is in scope for this version — flagged as ambiguous.
 
-- ⚠ No requirement ID in the known list is explicitly linked to password-reset/email functionality in this input; traceability to a specific US-xxx is unconfirmed.
+### ARCH-CP-signup-signin · approved · source: architecture:critical_paths.signup_signin
 
-### ARCH-006 · approved · source: architecture:critical_path:signup
+Critical path covering account registration and sign-in, including duplicate/invalid rejection and persistent sessions.
 
-Critical path for new-user sign-up: validates email, rejects duplicates, hashes password, creates account, issues a session, returns an empty note space.
+New visitor registers with email and password; the system rejects duplicate emails and invalid/empty fields, then signs the new user into an empty note space. Returning users sign in to see their existing note list. A persistent token keeps the session active across visits and devices.
 
-A new visitor submits a valid email and password. The backend validates the email, rejects duplicates, hashes the password, creates the account, issues a session token, and returns an empty note space.
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this critical path; linkage would need confirmation against the requirements phase.
 
-- ⚠ No explicit requirement ID is attached to this critical path in the input.
+### ARCH-CP-create-edit · approved · source: architecture:critical_paths.create_edit_note
 
-### ARCH-007 · approved · source: architecture:critical_path:note_edit
+Critical path for creating or editing a note, including title fallback from the first line and recency-based sorting.
 
-Critical path for creating/editing a note: verifies session, derives title from first line when absent, updates timestamp and search vector, scoped to the user.
+A signed-in user writes plain text; the backend stores it scoped to the owner, sets the last-edited timestamp to now, and derives the title from the first line when none is explicitly given. The note then sorts to the top of the list and syncs to every device the user signs into.
 
-A signed-in user saves note text and an optional title. The backend verifies the session, derives the title from the first line when none is given, writes the note with an updated last-edited timestamp scoped to the user, and keeps the full-text search vector current.
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this critical path; linkage would need confirmation against the requirements phase.
 
-- ⚠ No explicit requirement ID is attached to this critical path in the input, though it aligns functionally with title-derivation behavior described under the POST/PUT /notes endpoints.
+### ARCH-CP-list-search · approved · source: architecture:critical_paths.list_search
 
-### ARCH-008 · approved · source: architecture:critical_path:list_search
+Critical path for listing notes by recency and filtering them with keyword search.
 
-Critical path for listing and keyword-searching notes: returns only the signed-in user's notes, most-recently-edited first, filtered by PostgreSQL full-text search when a keyword is given.
+The user's notes load ordered by most recently edited, each showing its last-edited timestamp. Entering a keyword filters to notes whose title or body match, using PostgreSQL full-text search. Clearing the keyword restores the full, recency-ordered list.
 
-A signed-in user opens the note list, optionally with a keyword. The backend returns only that user's notes ordered by most-recently-edited, filtering by PostgreSQL full-text search when a query is present. This is the functional path backing the full-text search capability cited against US-011 at the database-decision level.
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this critical path; linkage would need confirmation against the requirements phase.
 
-**Related:** US-011
+### ARCH-DATA-MODEL · approved · source: architecture:entities
 
-### ARCH-009 · approved · source: architecture:entities
+Three data entities: users, notes, and password_resets, forming the persistent schema in PostgreSQL.
 
-Data model: three tables -- users, notes, password_reset_tokens -- covering accounts, note content/search, and reset-token lifecycle.
+users: id, email, password_hash, created_at. notes: id, user_id, title, body, search_vector, created_at, updated_at (search_vector backs PostgreSQL full-text search over title/body). password_resets: id, user_id, token_hash, expires_at, used_at (supports the password-reset flow with expiring, single-use tokens).
 
-Entities defined: 
-- users: id, email, password_hash, created_at.
-- notes: id, user_id, title, body, search_vector, created_at, updated_at.
-- password_reset_tokens: id, user_id, token_hash, expires_at, used_at, created_at.
-The notes.search_vector field backs PostgreSQL full-text search; password_reset_tokens supports expiring, single-use reset tokens.
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this data model; linkage would need confirmation against the requirements phase.
 
-- ⚠ No explicit requirement IDs are attached to individual entities in the input.
+### ARCH-API-AUTH · approved · source: architecture:endpoints.auth
 
-### ARCH-010 · approved · source: architecture:endpoints
+Authentication and session endpoints: signup, login, logout, session restore, and password reset.
 
-Full REST API surface: auth endpoints (signup/login/logout/password-reset) and per-user note CRUD plus keyword search.
+POST /auth/signup — create an account with email and password; rejects duplicate emails and invalid/empty fields; returns a session token. POST /auth/login — sign in with email and password; returns a persistent session token. POST /auth/logout — end the current session. GET /auth/me — return the signed-in user; used to restore a persistent session on return. POST /auth/password-reset/request — send a password-reset email via SMTP if the email exists. POST /auth/password-reset/confirm — set a new password using a valid reset token.
 
-Endpoints defined:
-- POST /auth/signup: Create an account with email and password; returns a session token and signs the user in to an empty note space. Rejects duplicate email and invalid email/empty password with field-level errors.
-- POST /auth/login: Sign in with email and password; returns a session token. Returns an invalid-credentials error on mismatch.
-- POST /auth/logout: End the current session.
-- POST /auth/password-reset/request: Request a password-reset email via SMTP; always returns success to avoid revealing which emails are registered.
-- POST /auth/password-reset/confirm: Set a new password using a valid reset token.
-- GET /notes: List the signed-in user's notes ordered by most-recently-edited; optional keyword filter over title and body via full-text search. Returns an empty list when the user has no notes.
-- POST /notes: Create a plain-text note; title is derived from the first line when none is given. Sets last-edited timestamp.
-- GET /notes/{id}: Fetch one of the signed-in user's notes; returns 404 if it belongs to another user or does not exist.
-- PUT /notes/{id}: Update a note's text or title and refresh its last-edited timestamp; re-derives the title from the first line when title is cleared.
-- DELETE /notes/{id}: Delete one of the signed-in user's notes; it is removed everywhere the account is used.
+**Related:** ARCH-CP-signup-signin, ARCH-COMP-api
 
-**Related:** US-011
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for these endpoints; linkage would need confirmation against the requirements phase.
 
-- ⚠ Endpoints are not individually mapped to requirement IDs in the input beyond the general US-011 search reference; per-endpoint traceability to US-001..US-013 is not explicit.
+### ARCH-API-NOTES · approved · source: architecture:endpoints.notes
 
-### ARCH-011 · approved · source: architecture:deployment_nodes
+Note CRUD and search endpoints, all scoped to the signed-in owner.
 
-Deployment topology: static SPA on S3+CloudFront, API on AWS App Runner, PostgreSQL on AWS RDS, and an external SMTP relay -- all within a single AWS account.
+GET /notes — list the signed-in user's notes ordered by most recently edited; optional keyword filter on title and body via full-text search. POST /notes — create a plain-text note for the signed-in user; derives title from first line when none given; sets last-edited to now. GET /notes/{id} — fetch a single note owned by the signed-in user. PUT /notes/{id} — edit a note's text or title; re-derives title fallback and updates last-edited timestamp. DELETE /notes/{id} — delete a note owned by the signed-in user.
 
-Deployment nodes:
-- web-spa: AWS S3 + CloudFront, serving static React build assets over HTTPS.
-- api-server: AWS App Runner, running FastAPI 0.115 on a Python container.
-- notes-db: AWS RDS PostgreSQL 16.
-- smtp-relay: External SMTP server, communicating over SMTP/TLS.
+**Related:** ARCH-CP-create-edit, ARCH-CP-list-search, ARCH-COMP-api
 
-- ⚠ No deployment phase input exists yet to confirm these nodes were actually provisioned as designed (see deployment phase gaps).
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for these endpoints; linkage would need confirmation against the requirements phase.
 
-### ARCH-012 · approved · source: architecture:technology_decisions
+### ARCH-DEPLOY · approved · source: architecture:deployment_nodes
 
-Technology choices: React 19 frontend, FastAPI 0.115 backend, PostgreSQL 16 database, AWS cloud -- each chosen with stated alternatives and rationale.
+Deployment topology: static web hosting via S3/CloudFront, API on AWS App Runner/ECS Fargate, managed PostgreSQL via RDS, and SMTP SaaS for email.
 
-Technology decisions:
-- Frontend: React 19 (alternatives considered: Vue, Svelte). Drives the single main screen -- searchable note list plus in-place editor -- with live, instant-feeling editing as users type and switch notes/devices. Cited against NFR-004 and US-012.
-- Backend: FastAPI 0.115 (alternatives considered: Flask, Express). Implements a small, clear API surface -- sign-in and per-user note CRUD plus search -- with little code and good performance under light load.
-- Database: PostgreSQL 16 (alternatives considered: MySQL, SQLite). Stores accounts and notes durably and consistently across devices and performs keyword search itself via built-in full-text search (tsvector + GIN), avoiding a separate search system. Cited against US-011.
-- Cloud: AWS (alternatives considered: GCP, Azure). Runs web, server, database, and email in one account on a free tier, keeping costs near zero while allowing room to grow without re-platforming.
+React Web: static build (React 19) served via AWS S3 + CloudFront (static hosting + CDN). FastAPI Backend: Python 3.12, Uvicorn, FastAPI 0.115, running on AWS App Runner / ECS Fargate. PostgreSQL: AWS RDS for PostgreSQL 16. SMTP Email: SMTP SaaS relay (e.g., Amazon SES SMTP). The full stack runs in one AWS account on the free tier per the architecture summary.
 
-**Related:** US-011, US-012
+**Related:** ARCH-COMP-web, ARCH-COMP-api, ARCH-COMP-db, ARCH-COMP-email
 
-- ⚠ NFR-004 is referenced in the input but is not present in the known requirement-key list provided for this project; confirm whether it is a tracked non-functional requirement elsewhere.
+### ARCH-TECH-frontend · approved · source: architecture:technology_decisions.frontend
+
+Frontend technology choice: React 19, selected over Vue and Svelte.
+
+React 19 drives the single main screen — a live note list and in-place plain-text editor that must feel instant while typing and switching notes (NFR-004) — and renders the responsive layout across phone, tablet and desktop (NFR-003). Built as a static bundle served from S3 + CloudFront. Alternatives considered: Vue, Svelte.
+
+**Related:** NFR-003, NFR-004
+
+- ⚠ NFR-003 and NFR-004 are referenced by the architecture input but are not in the known requirement key list (US-001..US-013); confirm these NFR IDs exist in the requirements phase.
+
+### ARCH-TECH-backend · approved · source: architecture:technology_decisions.backend
+
+Backend technology choice: FastAPI 0.115, selected over Flask and Django.
+
+FastAPI 0.115 handles the small, clear surface: email/password auth, persistent token sessions, and per-user note CRUD and search. Pydantic models validate email/password inputs, and the async stack stays fast under light personal-app load. Alternatives considered: Flask, Django.
+
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this decision; linkage would need confirmation against the requirements phase.
+
+### ARCH-TECH-database · approved · source: architecture:technology_decisions.database
+
+Database technology choice: PostgreSQL 16, selected over MySQL and SQLite.
+
+PostgreSQL 16 durably and privately stores accounts and notes with per-user ownership, stays consistent as a user edits from several devices, and performs keyword search itself via built-in full-text search (tsvector + GIN index) — no separate search service needed. Alternatives considered: MySQL, SQLite.
+
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this decision; linkage would need confirmation against the requirements phase.
+
+### ARCH-TECH-cloud · approved · source: architecture:technology_decisions.cloud
+
+Cloud platform choice: AWS, selected over GCP and Azure.
+
+AWS runs the whole app — static web, API, database and email — in one account on the free tier, keeping early costs near zero and leaving room to scale quietly if more people sign up. Alternatives considered: GCP, Azure.
+
+- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this decision; linkage would need confirmation against the requirements phase.
 <!-- sdlc:auto:end narrative -->
 
 <!-- sdlc:auto:start building-blocks -->
@@ -135,93 +146,94 @@ Technology decisions:
 
 | ID | Name | Technology | Responsibility | Depends on |
 |---|---|---|---|---|
-| frontend | Web SPA | React 19 | Responsive single-page UI: sign-up/sign-in screens, searchable note list ordered by most-recently-edited, and an in-place plain-text editor that feels instant while typing and switching notes. | backend |
-| backend | API Server | FastAPI 0.115 | REST API for authentication (sign-up, sign-in, logout, password reset), persistent JWT sessions, and per-user CRUD plus keyword search over notes. Enforces that users only ever read or write their own notes, derives titles from the first line, and sends reset emails via SMTP. | database, email |
-| database | Notes Datastore | PostgreSQL 16 | Durable, private storage of accounts and notes, consistent across devices, with full-text search over note title and body. | — |
-| email | Transactional Email (SMTP) | SMTP server | Sends password-reset (and optional verification) messages so a user who forgets their password is not locked out permanently. | — |
+| web | React Web App | React 19 | Responsive SPA: sign-up/sign-in screens, note list ordered by last edited, plain-text editor with instant typing, keyword search, and sign-out. Keeps the session token and enforces showing notes only when signed in. | api |
+| api | FastAPI Backend | FastAPI 0.115 | Authenticates users (email/password), issues and verifies persistent session tokens, scopes every note operation to the signed-in owner, serves note CRUD, recently-edited ordering and keyword search, derives note titles from the first line, and triggers password-reset emails. | db, email |
+| db | PostgreSQL Database | PostgreSQL 16 | Durable, private storage of accounts and notes; enforces per-user ownership; provides keyword search over note title and body using built-in full-text search; keeps data consistent across a user's devices. | — |
+| email | SMTP Email Sender | SMTP (SaaS) via AWS | Sends the few transactional emails (password reset and optional verification) so a user who forgets their password is not locked out. | — |
 
 ```mermaid
 graph TD
-  c_frontend["Web SPA"]
-  c_backend["API Server"]
-  c_database["Notes Datastore"]
-  c_email["Transactional Email (SMTP)"]
-  c_frontend --> c_backend
-  c_backend --> c_database
-  c_backend --> c_email
+  c_web["React Web App"]
+  c_api["FastAPI Backend"]
+  c_db["PostgreSQL Database"]
+  c_email["SMTP Email Sender"]
+  c_web --> c_api
+  c_api --> c_db
+  c_api --> c_email
 ```
 <!-- sdlc:auto:end building-blocks -->
 
 <!-- sdlc:auto:start runtime -->
 ## Runtime View
 
-### Sign up and start a note space
+### Sign up and sign in
 
-A new visitor submits a valid email and password. The backend validates the email, rejects duplicates, hashes the password, creates the account, issues a session token and returns an empty note space.
+New visitor registers with email and password (rejecting duplicates and invalid/empty fields), is signed into an empty note space, and returning users sign in to their note list. A persistent token keeps the session across visits and devices.
 
-- **Components:** frontend, backend, database
-- **Modules:** auth_router, auth_service, password_hasher, jwt_service, user_repository
-- **Key functions:** signup(email, password), hash_password(password), issue_token(user_id), create_user(email, password_hash)
+- **Components:** web, api, db
+- **Modules:** auth_router, auth_service, password_hasher, token_manager, user_repository
+- **Key functions:** sign_up(email, password), sign_in(email, password), hash_password(password), verify_password(password, hash), issue_token(user_id), verify_token(token)
 
 ```mermaid
 sequenceDiagram
-  participant U as SPA
+  participant U as User
+  participant W as Web
   participant A as API
-  participant DB as PostgreSQL
-  U->>A: POST /auth/signup email, password
-  A->>A: validate email and password
-  A->>DB: find user by email
-  DB-->>A: none
-  A->>A: hash password
-  A->>DB: insert user
-  DB-->>A: user id
-  A->>A: issue JWT
-  A-->>U: 201 token and empty notes
+  participant D as DB
+  U->>W: Enter email and password
+  W->>A: POST /auth/signup
+  A->>D: Check email not already registered
+  D-->>A: Email is free
+  A->>D: Insert user with hashed password
+  A-->>W: Session token and user
+  W-->>U: Show empty note list
 ```
 
 ### Create or edit a note with title fallback
 
-A signed-in user saves note text and optional title. The backend verifies the session, derives the title from the first line when none is given, writes the note with an updated last-edited timestamp scoped to the user, and keeps the full-text search vector current.
+A signed-in user writes plain text; the backend stores it scoped to the owner, sets the last-edited timestamp to now, and derives the title from the first line when none is given. The note then sorts to the top of the list and syncs to every device.
 
-- **Components:** frontend, backend, database
-- **Modules:** notes_router, notes_service, title_deriver, auth_dependency, note_repository
-- **Key functions:** save_note(user_id, note_id, title, body), derive_title(title, body), upsert_note(user_id, data)
+- **Components:** web, api, db
+- **Modules:** note_router, note_service, title_deriver, note_repository
+- **Key functions:** create_note(user_id, title, body), update_note(user_id, note_id, title, body), derive_title(title, body), touch_last_edited(note_id)
 
 ```mermaid
 sequenceDiagram
-  participant U as SPA
+  participant U as User
+  participant W as Web
   participant A as API
-  participant DB as PostgreSQL
-  U->>A: PUT /notes/id with token
-  A->>A: verify JWT and resolve user
-  A->>A: derive title from first line if empty
-  A->>DB: update note where id and user_id match, set updated_at now
-  DB-->>A: updated note
-  A-->>U: 200 saved note
+  participant D as DB
+  U->>W: Type note text and save
+  W->>A: POST /notes with token
+  A->>A: Verify token and owner
+  A->>A: Derive title from first line if empty
+  A->>D: Insert note with updated_at now
+  D-->>A: Saved note
+  A-->>W: Note with derived title and timestamp
+  W-->>U: Note appears at top of list
 ```
 
-### List and keyword-search my notes
+### List and keyword search
 
-A signed-in user opens the note list, optionally with a keyword. The backend returns only that user's notes ordered by most-recently-edited, filtering by PostgreSQL full-text search when a query is present.
+The user's notes load ordered by most recently edited, each with its last-edited timestamp. A keyword filters to notes whose title or body matches using PostgreSQL full-text search; clearing it restores the ordered list.
 
-- **Components:** frontend, backend, database
-- **Modules:** notes_router, notes_service, auth_dependency, note_repository
-- **Key functions:** list_notes(user_id, query), search_notes(user_id, query)
+- **Components:** web, api, db
+- **Modules:** note_router, note_service, search_query, note_repository
+- **Key functions:** list_notes(user_id), search_notes(user_id, keyword)
 
 ```mermaid
 sequenceDiagram
-  participant U as SPA
+  participant U as User
+  participant W as Web
   participant A as API
-  participant DB as PostgreSQL
-  U->>A: GET /notes?q=keyword with token
-  A->>A: verify JWT and resolve user
-  alt keyword present
-    A->>DB: select notes where user_id and search_vector matches query order by updated_at desc
-  else no keyword
-    A->>DB: select notes where user_id order by updated_at desc
-  end
-  DB-->>A: matching notes
-  A-->>U: 200 note list
+  participant D as DB
+  U->>W: Enter search keyword
+  W->>A: GET /notes?q=keyword with token
+  A->>A: Verify token and owner
+  A->>D: Full-text search owner notes ordered by updated_at
+  D-->>A: Matching notes
+  A-->>W: Results or empty set
+  W-->>U: Show matches or no-results state
 ```
 <!-- sdlc:auto:end runtime -->
 
@@ -230,26 +242,26 @@ sequenceDiagram
 
 | Name | Service | Runtime | Scaling | Environment |
 |---|---|---|---|---|
-| web-spa | AWS S3 + CloudFront (static React build) | Static assets over HTTPS | CDN edge caching, serverless scale | dev |
-| api-server | AWS App Runner | FastAPI 0.115 on Python container | Scale-to-low on light load, auto-scale on requests | dev |
-| notes-db | AWS RDS PostgreSQL | PostgreSQL 16 | Single free-tier instance, vertical scale later | dev |
-| smtp-relay | External SMTP server | SMTP over TLS | Provider-managed | dev |
+| React Web (static hosting + CDN) | AWS S3 + CloudFront | Static build (React 19) | CDN edge caching | dev |
+| FastAPI Backend | AWS (App Runner / ECS Fargate) | Python 3.12, Uvicorn, FastAPI 0.115 | Single small instance for dev, scales horizontally later | dev |
+| PostgreSQL | AWS RDS for PostgreSQL 16 | PostgreSQL 16 | Single db.t-class free-tier instance | dev |
+| SMTP Email | SMTP (SaaS) — e.g. Amazon SES SMTP | SMTP relay | Managed | dev |
 
 | Source | Target | Protocol |
 |---|---|---|
-| web-spa | api-server | HTTPS |
-| api-server | notes-db | TLS (PostgreSQL wire protocol) |
-| api-server | smtp-relay | SMTP over TLS |
+| React Web (static hosting + CDN) | FastAPI Backend | HTTPS |
+| FastAPI Backend | PostgreSQL | TLS (PostgreSQL wire protocol) |
+| FastAPI Backend | SMTP Email | SMTP over TLS |
 
 ```mermaid
 graph LR
-  n_web_spa["web-spa<br/>AWS S3 + CloudFront (static React build)"]
-  n_api_server["api-server<br/>AWS App Runner"]
-  n_notes_db["notes-db<br/>AWS RDS PostgreSQL"]
-  n_smtp_relay["smtp-relay<br/>External SMTP server"]
-  n_web_spa -->|"HTTPS"| n_api_server
-  n_api_server -->|"TLS (PostgreSQL wire protocol)"| n_notes_db
-  n_api_server -->|"SMTP over TLS"| n_smtp_relay
+  n_React_Web__static_hosting___CDN_["React Web (static hosting + CDN)<br/>AWS S3 + CloudFront"]
+  n_FastAPI_Backend["FastAPI Backend<br/>AWS (App Runner / ECS Fargate)"]
+  n_PostgreSQL["PostgreSQL<br/>AWS RDS for PostgreSQL 16"]
+  n_SMTP_Email["SMTP Email<br/>SMTP (SaaS) — e.g. Amazon SES SMTP"]
+  n_React_Web__static_hosting___CDN_ -->|"HTTPS"| n_FastAPI_Backend
+  n_FastAPI_Backend -->|"TLS (PostgreSQL wire protocol)"| n_PostgreSQL
+  n_FastAPI_Backend -->|"SMTP over TLS"| n_SMTP_Email
 ```
 <!-- sdlc:auto:end deployment-view -->
 

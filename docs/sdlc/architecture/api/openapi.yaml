@@ -7,10 +7,8 @@ info:
 paths:
   /auth/login:
     post:
-      summary: Sign in with email and password; returns a session token. Returns an
-        invalid-credentials error on mismatch.
-      description: Sign in with email and password; returns a session token. Returns
-        an invalid-credentials error on mismatch.
+      summary: Sign in with email and password; returns a persistent session token.
+      description: Sign in with email and password; returns a persistent session token.
       operationId: post_auth_login
       parameters: []
       requestBody:
@@ -21,7 +19,7 @@ paths:
               description: '{ email, password }'
       responses:
         '200':
-          description: '{ token, user: { id, email } }'
+          description: '{ token, user: { id, email } } or 401 invalid credentials'
   /auth/logout:
     post:
       summary: End the current session.
@@ -36,7 +34,20 @@ paths:
               description: '{}'
       responses:
         '200':
-          description: '{ ok: true }'
+          description: '204'
+      security:
+      - bearerAuth: []
+  /auth/me:
+    get:
+      summary: Return the signed-in user; used to restore a persistent session on
+        return.
+      description: Return the signed-in user; used to restore a persistent session
+        on return.
+      operationId: get_auth_me
+      parameters: []
+      responses:
+        '200':
+          description: '{ id, email } or 401'
       security:
       - bearerAuth: []
   /auth/password-reset/confirm:
@@ -53,13 +64,11 @@ paths:
               description: '{ token, new_password }'
       responses:
         '200':
-          description: '{ ok: true }'
+          description: 204 or 400 invalid/expired token
   /auth/password-reset/request:
     post:
-      summary: Request a password-reset email via SMTP; always returns success to
-        avoid revealing which emails are registered.
-      description: Request a password-reset email via SMTP; always returns success
-        to avoid revealing which emails are registered.
+      summary: Send a password-reset email via SMTP if the email exists.
+      description: Send a password-reset email via SMTP if the email exists.
       operationId: post_auth_password_reset_request
       parameters: []
       requestBody:
@@ -70,14 +79,13 @@ paths:
               description: '{ email }'
       responses:
         '200':
-          description: '{ ok: true }'
+          description: 202 accepted (no account disclosure)
   /auth/signup:
     post:
-      summary: Create an account with email and password; returns a session token
-        and signs the user in to an empty note space. Rejects
-      description: Create an account with email and password; returns a session token
-        and signs the user in to an empty note space. Rejects duplicate email and
-        invalid email/empty password with field-level errors.
+      summary: Create an account with email and password; rejects duplicate emails
+        and invalid/empty fields; returns a session token.
+      description: Create an account with email and password; rejects duplicate emails
+        and invalid/empty fields; returns a session token.
       operationId: post_auth_signup
       parameters: []
       requestBody:
@@ -88,26 +96,26 @@ paths:
               description: '{ email, password }'
       responses:
         '200':
-          description: '{ token, user: { id, email } }'
+          description: '{ token, user: { id, email } } or 409 email in use / 422 field
+            errors'
   /notes:
     get:
-      summary: List the signed-in user's notes ordered by most-recently-edited; optional
-        keyword filter over title and body via full-te
-      description: List the signed-in user's notes ordered by most-recently-edited;
-        optional keyword filter over title and body via full-text search. Returns
-        an empty list when the user has no notes.
+      summary: List the signed-in user's notes ordered by most recently edited; optional
+        keyword filter on title and body via full-text
+      description: List the signed-in user's notes ordered by most recently edited;
+        optional keyword filter on title and body via full-text search.
       operationId: get_notes
       parameters: []
       responses:
         '200':
-          description: '[ { id, title, body_preview, updated_at } ]'
+          description: '[ { id, title, body, updated_at } ] (empty set when none match)'
       security:
       - bearerAuth: []
     post:
-      summary: Create a plain-text note; title is derived from the first line when
-        none is given. Sets last-edited timestamp.
-      description: Create a plain-text note; title is derived from the first line
-        when none is given. Sets last-edited timestamp.
+      summary: Create a plain-text note for the signed-in user; derives title from
+        first line when none given; sets last-edited to now.
+      description: Create a plain-text note for the signed-in user; derives title
+        from first line when none given; sets last-edited to now.
       operationId: post_notes
       parameters: []
       requestBody:
@@ -115,7 +123,7 @@ paths:
           application/json:
             schema:
               type: object
-              description: '{ title?, body }'
+              description: '{ title?, body? }'
       responses:
         '200':
           description: '{ id, title, body, updated_at }'
@@ -123,10 +131,8 @@ paths:
       - bearerAuth: []
   /notes/{id}:
     get:
-      summary: Fetch one of the signed-in user's notes; returns 404 if it belongs
-        to another user or does not exist.
-      description: Fetch one of the signed-in user's notes; returns 404 if it belongs
-        to another user or does not exist.
+      summary: Fetch a single note owned by the signed-in user.
+      description: Fetch a single note owned by the signed-in user.
       operationId: get_notes_id
       parameters:
       - name: id
@@ -136,14 +142,14 @@ paths:
           type: string
       responses:
         '200':
-          description: '{ id, title, body, created_at, updated_at }'
+          description: '{ id, title, body, updated_at } or 404'
       security:
       - bearerAuth: []
     put:
-      summary: Update a note's text or title and refresh its last-edited timestamp;
-        re-derives the title from the first line when title
-      description: Update a note's text or title and refresh its last-edited timestamp;
-        re-derives the title from the first line when title is cleared.
+      summary: Edit a note's text or title; re-derives title fallback and updates
+        last-edited timestamp.
+      description: Edit a note's text or title; re-derives title fallback and updates
+        last-edited timestamp.
       operationId: put_notes_id
       parameters:
       - name: id
@@ -156,17 +162,15 @@ paths:
           application/json:
             schema:
               type: object
-              description: '{ title?, body }'
+              description: '{ title?, body? }'
       responses:
         '200':
-          description: '{ id, title, body, updated_at }'
+          description: '{ id, title, body, updated_at } or 404'
       security:
       - bearerAuth: []
     delete:
-      summary: Delete one of the signed-in user's notes; it is removed everywhere
-        the account is used.
-      description: Delete one of the signed-in user's notes; it is removed everywhere
-        the account is used.
+      summary: Delete a note owned by the signed-in user.
+      description: Delete a note owned by the signed-in user.
       operationId: delete_notes_id
       parameters:
       - name: id
@@ -176,7 +180,7 @@ paths:
           type: string
       responses:
         '200':
-          description: '{ ok: true }'
+          description: 204 or 404
       security:
       - bearerAuth: []
 components:
@@ -227,10 +231,9 @@ components:
       required:
       - id
       - user_id
-      - body
       - created_at
       - updated_at
-    password_reset_tokens:
+    password_resets:
       type: object
       properties:
         id:
@@ -247,12 +250,8 @@ components:
         used_at:
           type: string
           format: date-time
-        created_at:
-          type: string
-          format: date-time
       required:
       - id
       - user_id
       - token_hash
       - expires_at
-      - created_at
