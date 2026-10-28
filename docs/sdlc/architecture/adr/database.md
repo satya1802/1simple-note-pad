@@ -6,7 +6,7 @@ Date: 2026-10-28
 
 ## Context and Problem Statement
 
-Which Database technology does the project use? Decided in architecture v2.
+Which Database technology does the project use? Decided in architecture v1.
 
 ## Considered Options
 

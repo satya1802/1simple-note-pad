@@ -2,7 +2,7 @@
 openapi: 3.1.0
 info:
   title: simple note pad
-  version: architecture-v2
+  version: architecture-v1
   description: Designed API from the approved architecture (not extracted from code).
 paths:
   /auth/login:

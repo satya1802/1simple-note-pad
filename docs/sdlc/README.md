@@ -5,7 +5,7 @@
 <!-- sdlc:auto:start overview -->
 simple note pad
 
-**Documentation version:** v4
+**Documentation version:** v5
 <!-- sdlc:auto:end overview -->
 
 ## Contents
@@ -14,7 +14,7 @@ simple note pad
 | Document | State |
 |---|---|
 | [Requirements](requirements/README.md) | v1 approved |
-| [Architecture](architecture/README.md) | 16 entries |
+| [Architecture](architecture/README.md) | 12 entries |
 | [Development](development/README.md) | 4 entries |
 | [Testing](testing/README.md) | 1 entry |
 | [Deployment](deployment/README.md) | 1 entry |
@@ -31,7 +31,7 @@ simple note pad
 | [Runbook](deployment/runbook.md) | not deployed yet |
 | [Release notes](deployment/release-notes.md) | 0 releases |
 | [Traceability matrix](traceability-matrix.md) | 13 requirements |
-| [Changelog](CHANGELOG.md) | 4 versions |
+| [Changelog](CHANGELOG.md) | 5 versions |
 <!-- sdlc:auto:end contents -->
 
 ## Open gaps
@@ -43,14 +43,11 @@ simple note pad
 
 ### Architecture
 
-- Input does not list which specific US-00x requirements this architecture version satisfies or supersedes from version 1; only inferred from component/critical-path descriptions.
-- No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
-- Input says 'optional verification' email without clarifying whether email verification is in scope for this version — flagged as ambiguous.
-- No explicit requirement IDs (US-00x) are cited in the input for this critical path; linkage would need confirmation against the requirements phase.
-- No explicit requirement IDs (US-00x) are cited in the input for this data model; linkage would need confirmation against the requirements phase.
-- No explicit requirement IDs (US-00x) are cited in the input for these endpoints; linkage would need confirmation against the requirements phase.
-- NFR-003 and NFR-004 are referenced by the architecture input but are not in the known requirement key list (US-001..US-013); confirm these NFR IDs exist in the requirements phase.
-- No explicit requirement IDs (US-00x) are cited in the input for this decision; linkage would need confirmation against the requirements phase.
+- Input labels this 'Version: 1' but also describes it as a revision review against 'the previously approved architecture' -- the prior version's content was not supplied, so the claim that scope is unchanged cannot be independently verified.
+- No explicit mapping from architecture components/endpoints to specific requirement ids (US-001..US-013) was included in the input, so related_ids could not be populated for most entries without guessing.
+- Input says 'optional verification' email but does not state whether verification is actually in scope for this build -- status is ambiguous.
+- Choice between App Runner and ECS Fargate for the backend is left open ('App Runner / ECS Fargate') -- final selection not recorded in input.
+- NFR-003 and NFR-004 are referenced as rationale but are not present in the known requirement keys list (US-001..US-013) supplied for this phase, so they could not be linked via related_ids.
 
 ### Development
 

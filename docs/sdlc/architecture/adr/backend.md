@@ -6,7 +6,7 @@ Date: 2026-10-28
 
 ## Context and Problem Statement
 
-Which Backend technology does the project use? Decided in architecture v2.
+Which Backend technology does the project use? Decided in architecture v1.
 
 ## Considered Options
 

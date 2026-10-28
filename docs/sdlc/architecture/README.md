@@ -5,140 +5,86 @@
 <!-- sdlc:auto:start narrative -->
 ## Overview
 
-### ARCH-000 · approved · source: architecture:summary
+### ARCH-001 · approved · source: architecture:summary
 
-Overall architecture for the Simple Note Pad app: a React 19 SPA, FastAPI 0.115 backend, PostgreSQL 16 database, and SMTP email sender, all hosted in one AWS account on the free tier.
+Overall architecture approved, version 1, for a lightweight personal note-taking web app: React 19 SPA + FastAPI 0.115 backend + PostgreSQL 16 + SMTP email, all on AWS free tier.
 
-Approved, version 2. The system is a lightweight, responsive personal note-taking web app. The React 19 SPA provides sign-in/sign-up and one main screen with a searchable, recently-edited-ordered note list plus an in-place plain-text editor. FastAPI 0.115 handles email/password auth with persistent token sessions and owns per-user note CRUD and keyword search. PostgreSQL 16 durably stores accounts and notes and performs keyword search via built-in full-text search (no separate search engine needed). Transactional password-reset email is sent via an approved SMTP service. The whole app runs in a single AWS account on the free tier.
+The system is a responsive single-page app with email/password sign-in, one main screen with a searchable note list (ordered by recently edited) and an in-place plain-text editor. The backend handles sign-up, persistent-token sign-in, per-user note CRUD, first-line title fallback, and keyword search. PostgreSQL stores accounts and notes and performs keyword search itself via built-in full-text search (tsvector + GIN), avoiding a separate search service. Password-reset email goes through the approved SMTP service. The author states this revision reviewed every story, NFR, the approved stack, and services against the prior design and found it still holds in full, keeping component ids (web, api, db, email) and all endpoint paths stable, with only a minor wording clean-up to the data-model notes clarifying the index description.
 
-- ⚠ Input does not list which specific US-00x requirements this architecture version satisfies or supersedes from version 1; only inferred from component/critical-path descriptions.
+- ⚠ Input labels this 'Version: 1' but also describes it as a revision review against 'the previously approved architecture' -- the prior version's content was not supplied, so the claim that scope is unchanged cannot be independently verified.
+- ⚠ No explicit mapping from architecture components/endpoints to specific requirement ids (US-001..US-013) was included in the input, so related_ids could not be populated for most entries without guessing.
 
-### ARCH-COMP-web · approved · source: architecture:components.web
+### ARCH-WEB · approved · source: architecture:components:web
 
-React 19 single-page web app providing sign-up/sign-in, the note list, and the in-place plain-text editor.
+React 19 single-page frontend component: sign-up/sign-in screens, note list, in-place editor, search, sign-out.
 
-Component 'web': React Web App (React 19). Responsible for sign-up/sign-in screens, a note list ordered by last edited, a plain-text editor with instant typing, keyword search, and sign-out. Keeps the session token client-side and enforces that notes are shown only when signed in.
+Responsive SPA built with React 19. Provides sign-up/sign-in screens, a note list ordered by last edited, a plain-text editor with instant typing, keyword search, and sign-out. Keeps the session token client-side and enforces that notes are shown only when signed in. Built as a static bundle served from S3 + CloudFront.
 
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
+### ARCH-API · approved · source: architecture:components:api
 
-### ARCH-COMP-api · approved · source: architecture:components.api
+FastAPI 0.115 backend component: authentication, session tokens, per-user note CRUD, search, password-reset trigger.
 
-FastAPI 0.115 backend handling authentication, session tokens, and per-user note CRUD/search.
+Authenticates users via email/password, issues and verifies persistent session tokens, scopes every note operation to the signed-in owner, serves note CRUD, recently-edited ordering and keyword search, derives note titles from the first line when none given, and triggers password-reset emails. Pydantic models validate email/password inputs; async stack targets fast response under light personal-app load.
 
-Component 'api': FastAPI Backend (FastAPI 0.115). Authenticates users via email/password, issues and verifies persistent session tokens, scopes every note operation to the signed-in owner, serves note CRUD, recently-edited ordering and keyword search, derives note titles from the first line when none is given, and triggers password-reset emails.
+### ARCH-DB · approved · source: architecture:components:db
 
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
+PostgreSQL 16 database component: durable per-user storage of accounts and notes with built-in full-text search.
 
-### ARCH-COMP-db · approved · source: architecture:components.db
+Durable, private storage of accounts and notes; enforces per-user ownership; provides keyword search over note title and body using PostgreSQL's built-in full-text search (tsvector + GIN index); keeps data consistent across a user's devices. This revision made a minor wording clarification to the index description in the data-model notes (no structural change).
 
-PostgreSQL 16 database for durable, private storage of accounts and notes with built-in keyword search.
+### ARCH-EMAIL · approved · source: architecture:components:email
 
-Component 'db': PostgreSQL Database (PostgreSQL 16). Provides durable, private storage of accounts and notes, enforces per-user ownership, provides keyword search over note title and body via built-in full-text search, and keeps data consistent across a user's devices.
+SMTP email sender component: transactional password-reset (and optional verification) emails.
 
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
+Sends the few transactional emails required -- password reset and optionally account verification -- via an SMTP SaaS service running through AWS (e.g. Amazon SES SMTP), so a user who forgets their password is not locked out.
 
-### ARCH-COMP-email · approved · source: architecture:components.email
+- ⚠ Input says 'optional verification' email but does not state whether verification is actually in scope for this build -- status is ambiguous.
 
-SMTP-based email sender used for transactional password-reset (and optional verification) emails.
+### ARCH-CP-SIGNUP · approved · source: architecture:critical_paths:sign_up_and_sign_in
 
-Component 'email': SMTP Email Sender (SMTP (SaaS) via AWS). Sends the few transactional emails (password reset and optional verification) so a user who forgets their password is not locked out.
+Critical path for account creation and sign-in using persistent session tokens.
 
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this component; linkage would need confirmation against the requirements phase.
-- ⚠ Input says 'optional verification' email without clarifying whether email verification is in scope for this version — flagged as ambiguous.
+A new visitor registers with email and password; duplicate emails and invalid/empty fields are rejected. On success the user is signed into an empty note space. Returning users sign in to see their existing note list. A persistent token keeps the session active across visits and devices.
 
-### ARCH-CP-signup-signin · approved · source: architecture:critical_paths.signup_signin
+### ARCH-CP-NOTEEDIT · approved · source: architecture:critical_paths:create_or_edit_note
 
-Critical path covering account registration and sign-in, including duplicate/invalid rejection and persistent sessions.
+Critical path for creating/editing a note with automatic title fallback and recency ordering.
 
-New visitor registers with email and password; the system rejects duplicate emails and invalid/empty fields, then signs the new user into an empty note space. Returning users sign in to see their existing note list. A persistent token keeps the session active across visits and devices.
+A signed-in user writes plain text; the backend stores it scoped to the owner, sets the last-edited timestamp to now, and derives the title from the first line when none is given. The note then sorts to the top of the list and syncs across every device.
 
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this critical path; linkage would need confirmation against the requirements phase.
+### ARCH-CP-SEARCH · approved · source: architecture:critical_paths:list_and_keyword_search
 
-### ARCH-CP-create-edit · approved · source: architecture:critical_paths.create_edit_note
+Critical path for listing notes by recency and filtering them via keyword full-text search.
 
-Critical path for creating or editing a note, including title fallback from the first line and recency-based sorting.
+The user's notes load ordered by most recently edited, each showing its last-edited timestamp. Entering a keyword filters to notes whose title or body matches, using PostgreSQL full-text search. Clearing the keyword restores the full ordered list.
 
-A signed-in user writes plain text; the backend stores it scoped to the owner, sets the last-edited timestamp to now, and derives the title from the first line when none is explicitly given. The note then sorts to the top of the list and syncs to every device the user signs into.
+### ARCH-DATA · approved · source: architecture:entities
 
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this critical path; linkage would need confirmation against the requirements phase.
+Data model: users, notes, and password_resets tables.
 
-### ARCH-CP-list-search · approved · source: architecture:critical_paths.list_search
+users: id, email, password_hash, created_at. notes: id, user_id, title, body, search_vector, created_at, updated_at (search_vector backs PostgreSQL full-text search over title and body). password_resets: id, user_id, token_hash, expires_at, used_at, supporting the password-reset email flow.
 
-Critical path for listing notes by recency and filtering them with keyword search.
+### ARCH-API-ENDPOINTS · approved · source: architecture:endpoints
 
-The user's notes load ordered by most recently edited, each showing its last-edited timestamp. Entering a keyword filters to notes whose title or body match, using PostgreSQL full-text search. Clearing the keyword restores the full, recency-ordered list.
+Full REST API surface for auth, password reset, and note CRUD/search, kept stable across this revision.
 
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this critical path; linkage would need confirmation against the requirements phase.
-
-### ARCH-DATA-MODEL · approved · source: architecture:entities
-
-Three data entities: users, notes, and password_resets, forming the persistent schema in PostgreSQL.
-
-users: id, email, password_hash, created_at. notes: id, user_id, title, body, search_vector, created_at, updated_at (search_vector backs PostgreSQL full-text search over title/body). password_resets: id, user_id, token_hash, expires_at, used_at (supports the password-reset flow with expiring, single-use tokens).
-
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this data model; linkage would need confirmation against the requirements phase.
-
-### ARCH-API-AUTH · approved · source: architecture:endpoints.auth
-
-Authentication and session endpoints: signup, login, logout, session restore, and password reset.
-
-POST /auth/signup — create an account with email and password; rejects duplicate emails and invalid/empty fields; returns a session token. POST /auth/login — sign in with email and password; returns a persistent session token. POST /auth/logout — end the current session. GET /auth/me — return the signed-in user; used to restore a persistent session on return. POST /auth/password-reset/request — send a password-reset email via SMTP if the email exists. POST /auth/password-reset/confirm — set a new password using a valid reset token.
-
-**Related:** ARCH-CP-signup-signin, ARCH-COMP-api
-
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for these endpoints; linkage would need confirmation against the requirements phase.
-
-### ARCH-API-NOTES · approved · source: architecture:endpoints.notes
-
-Note CRUD and search endpoints, all scoped to the signed-in owner.
-
-GET /notes — list the signed-in user's notes ordered by most recently edited; optional keyword filter on title and body via full-text search. POST /notes — create a plain-text note for the signed-in user; derives title from first line when none given; sets last-edited to now. GET /notes/{id} — fetch a single note owned by the signed-in user. PUT /notes/{id} — edit a note's text or title; re-derives title fallback and updates last-edited timestamp. DELETE /notes/{id} — delete a note owned by the signed-in user.
-
-**Related:** ARCH-CP-create-edit, ARCH-CP-list-search, ARCH-COMP-api
-
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for these endpoints; linkage would need confirmation against the requirements phase.
+Auth: POST /auth/signup (create account, reject duplicates/invalid fields, returns session token); POST /auth/login (sign in, returns persistent token); POST /auth/logout (end session); GET /auth/me (restore persistent session). Password reset: POST /auth/password-reset/request (send reset email via SMTP if email exists); POST /auth/password-reset/confirm (set new password with valid token). Notes: GET /notes (list by most recently edited, optional keyword filter via full-text search); POST /notes (create note, title fallback from first line, sets last-edited); GET /notes/{id} (fetch single owned note); PUT /notes/{id} (edit text/title, re-derives title fallback, updates last-edited); DELETE /notes/{id} (delete owned note). All endpoint paths are stated as kept stable from the prior design in this revision.
 
 ### ARCH-DEPLOY · approved · source: architecture:deployment_nodes
 
-Deployment topology: static web hosting via S3/CloudFront, API on AWS App Runner/ECS Fargate, managed PostgreSQL via RDS, and SMTP SaaS for email.
+Deployment topology: static web on S3/CloudFront, API on AWS App Runner/ECS Fargate, PostgreSQL on RDS, SMTP SaaS for email -- all in one AWS account on the free tier.
 
-React Web: static build (React 19) served via AWS S3 + CloudFront (static hosting + CDN). FastAPI Backend: Python 3.12, Uvicorn, FastAPI 0.115, running on AWS App Runner / ECS Fargate. PostgreSQL: AWS RDS for PostgreSQL 16. SMTP Email: SMTP SaaS relay (e.g., Amazon SES SMTP). The full stack runs in one AWS account on the free tier per the architecture summary.
+React Web: static build (React 19) hosted on AWS S3 + CloudFront. FastAPI Backend: Python 3.12, Uvicorn, FastAPI 0.115, running on AWS App Runner or ECS Fargate. PostgreSQL: AWS RDS for PostgreSQL 16. SMTP Email: SaaS SMTP relay (e.g. Amazon SES SMTP). The whole app runs in a single AWS account on the free tier.
 
-**Related:** ARCH-COMP-web, ARCH-COMP-api, ARCH-COMP-db, ARCH-COMP-email
+- ⚠ Choice between App Runner and ECS Fargate for the backend is left open ('App Runner / ECS Fargate') -- final selection not recorded in input.
 
-### ARCH-TECH-frontend · approved · source: architecture:technology_decisions.frontend
+### ARCH-TECH · approved · source: architecture:technology_decisions
 
-Frontend technology choice: React 19, selected over Vue and Svelte.
+Key technology choices and their rationale: React 19, FastAPI 0.115, PostgreSQL 16, AWS.
 
-React 19 drives the single main screen — a live note list and in-place plain-text editor that must feel instant while typing and switching notes (NFR-004) — and renders the responsive layout across phone, tablet and desktop (NFR-003). Built as a static bundle served from S3 + CloudFront. Alternatives considered: Vue, Svelte.
+Frontend -- React 19 (alternatives considered: Vue, Svelte): drives the single main screen (live note list, in-place editor needing instant feel while typing/switching notes per NFR-004) and renders the responsive layout across phone/tablet/desktop (NFR-003); built as a static bundle on S3+CloudFront. Backend -- FastAPI 0.115 (alternatives: Flask, Django): handles email/password auth, persistent token sessions, per-user note CRUD/search; Pydantic validates inputs; async stack stays fast under light personal-app load. Database -- PostgreSQL 16 (alternatives: MySQL, SQLite): durably/privately stores accounts and notes with per-user ownership, stays consistent across devices, performs keyword search itself via built-in full-text search (tsvector + GIN) with no separate search service needed. Cloud -- AWS (alternatives: GCP, Azure): runs static web, API, database, and email in one account on the free tier, keeping early costs near zero while leaving room to scale.
 
-**Related:** NFR-003, NFR-004
-
-- ⚠ NFR-003 and NFR-004 are referenced by the architecture input but are not in the known requirement key list (US-001..US-013); confirm these NFR IDs exist in the requirements phase.
-
-### ARCH-TECH-backend · approved · source: architecture:technology_decisions.backend
-
-Backend technology choice: FastAPI 0.115, selected over Flask and Django.
-
-FastAPI 0.115 handles the small, clear surface: email/password auth, persistent token sessions, and per-user note CRUD and search. Pydantic models validate email/password inputs, and the async stack stays fast under light personal-app load. Alternatives considered: Flask, Django.
-
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this decision; linkage would need confirmation against the requirements phase.
-
-### ARCH-TECH-database · approved · source: architecture:technology_decisions.database
-
-Database technology choice: PostgreSQL 16, selected over MySQL and SQLite.
-
-PostgreSQL 16 durably and privately stores accounts and notes with per-user ownership, stays consistent as a user edits from several devices, and performs keyword search itself via built-in full-text search (tsvector + GIN index) — no separate search service needed. Alternatives considered: MySQL, SQLite.
-
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this decision; linkage would need confirmation against the requirements phase.
-
-### ARCH-TECH-cloud · approved · source: architecture:technology_decisions.cloud
-
-Cloud platform choice: AWS, selected over GCP and Azure.
-
-AWS runs the whole app — static web, API, database and email — in one account on the free tier, keeping early costs near zero and leaving room to scale quietly if more people sign up. Alternatives considered: GCP, Azure.
-
-- ⚠ No explicit requirement IDs (US-00x) are cited in the input for this decision; linkage would need confirmation against the requirements phase.
+- ⚠ NFR-003 and NFR-004 are referenced as rationale but are not present in the known requirement keys list (US-001..US-013) supplied for this phase, so they could not be linked via related_ids.
 <!-- sdlc:auto:end narrative -->
 
 <!-- sdlc:auto:start building-blocks -->
