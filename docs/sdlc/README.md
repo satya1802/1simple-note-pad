@@ -5,7 +5,7 @@
 <!-- sdlc:auto:start overview -->
 simple note pad
 
-**Documentation version:** v5
+**Documentation version:** v6
 <!-- sdlc:auto:end overview -->
 
 ## Contents
@@ -15,7 +15,7 @@ simple note pad
 |---|---|
 | [Requirements](requirements/README.md) | v1 approved |
 | [Architecture](architecture/README.md) | 12 entries |
-| [Development](development/README.md) | 4 entries |
+| [Development](development/README.md) | 5 entries |
 | [Testing](testing/README.md) | 1 entry |
 | [Deployment](deployment/README.md) | 1 entry |
 | [Maintenance](maintenance/README.md) | 1 entry |
@@ -31,7 +31,7 @@ simple note pad
 | [Runbook](deployment/runbook.md) | not deployed yet |
 | [Release notes](deployment/release-notes.md) | 0 releases |
 | [Traceability matrix](traceability-matrix.md) | 13 requirements |
-| [Changelog](CHANGELOG.md) | 5 versions |
+| [Changelog](CHANGELOG.md) | 6 versions |
 <!-- sdlc:auto:end contents -->
 
 ## Open gaps
@@ -51,15 +51,15 @@ simple note pad
 
 ### Development
 
-- No record of actual development execution (tickets started/completed, code produced, commits, PRs) exists in the input -- only the plan's assignment of work. Completion status of any story cannot be confirmed.
-- No evidence provided that any US-001 through US-004 ticket was actually started, implemented, or completed.
-- 4 points of the 20-point capacity are unaccounted for by named items -- unclear if intentional buffer or an omission.
-- No evidence provided that any US-005 through US-008 ticket was actually started, implemented, or completed.
-- 5 points of the 20-point capacity are unaccounted for by named items.
-- Sprint 2's stated goal references recency ordering, but the corresponding story (US-009) is listed under Sprint 3/EPIC-003, not Sprint 2 -- discrepancy between sprint goal text and item assignment should be confirmed.
-- No evidence provided that any US-009 through US-013 ticket was actually started, implemented, or completed.
-- 2 points of the 20-point capacity are unaccounted for by named items.
-- US-013 ('Free to use with no billing') is described as a frontend-agent story with no detail on what, if any, functionality or verification this entails -- unclear what is actually being built versus simply a policy statement.
+- No record of plan approver or approval date.
+- No ticket execution status (in-progress/done), code, or commits reported for any sprint item -- development phase has not yet produced build artifacts in this input.
+- No implementation, code, or test-pass status reported for US-001 through US-004.
+- No record of who (human or agent) actually executed these stories beyond the planned backend-agent role assignment.
+- No implementation, code, or test-pass status reported for US-005 through US-008.
+- No implementation, code, or test-pass status reported for US-009 through US-011.
+- Sprint 3 capacity (20) is shared across EPIC-003 and EPIC-004 items; combined planned points (18) are close to capacity -- no confirmation both epics fit within the single sprint's actual execution.
+- No implementation, code, or test-pass status reported for US-012 and US-013.
+- No detail on what 'free to use' entails technically (e.g. no billing integration, no account tier) beyond the story title.
 
 ### Testing
 
