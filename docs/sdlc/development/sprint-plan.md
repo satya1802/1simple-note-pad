@@ -5,7 +5,7 @@
 <!-- sdlc:auto:start sprints -->
 ## Sprint 1: Sprint 1
 
-Stand up account sign-up, sign-in, persistent sessions, and enforce that notes are private per account
+Deliver account sign-up, sign-in, persistent cross-device sessions, and enforce that notes are private to their owner.
 
 Capacity: 20 points · Committed: 16
 
@@ -18,7 +18,7 @@ Capacity: 20 points · Committed: 16
 
 ## Sprint 2: Sprint 2
 
-Deliver core note creation, titling, editing, deletion, and the recently-edited note list
+Deliver core note CRUD -- create, title with first-line fallback, edit, delete -- and the main note list ordered by most recently edited.
 
 Capacity: 20 points · Committed: 20
 
@@ -32,14 +32,14 @@ Capacity: 20 points · Committed: 20
 
 ## Sprint 3: Sprint 3
 
-Add keyword search, timestamp display, and responsive/free-to-use delivery across devices
+Deliver last-edited timestamps in the list, keyword search, a responsive layout across devices, and confirm the app has no billing flows.
 
 Capacity: 20 points · Committed: 13
 
 | Key | Type | Title | Points | Role | Depends on |
 |---|---|---|---|---|---|
 | US-010 | Story | See last-edited timestamp on each note | 2 | frontend-agent | US-009 |
-| US-011 | Story | Search notes by keyword | 5 | backend-agent | US-005 |
+| US-011 | Story | Search notes by keyword | 5 | backend-agent | US-009 |
 | US-012 | Story | Use the app on any device size | 5 | frontend-agent | US-009 |
 | US-013 | Story | Free to use with no billing | 1 | frontend-agent | — |
 
